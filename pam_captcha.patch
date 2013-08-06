@@ -1,0 +1,56 @@
+--- ../../../pam_captcha_origin/pam_captcha-1.5/pam_captcha.c	2010-07-16 10:11:17.000000000 +0300
++++ pam_captcha.c	2013-08-06 13:00:27.123365169 +0300
+@@ -80,7 +80,7 @@
+ #define PAM_EXTERN
+ #endif
+ 
+-static char *fonts[] = { "standard", "big" };
++static char *fonts[] = { "standard", "big","shadow", "lean","banner","digital","bubble","mini","slant" };
+ 
+ #define BUFFERSIZE 10240
+ const char alphabet[] = "ABCDEFGHJKMNOPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
+@@ -93,6 +93,7 @@
+ static int dda_captcha(pam_handle_t *pamh, int flags, int argc, const char *argv[]);
+ static int math_captcha(pam_handle_t *pamh, int flags, int argc, const char *argv[]);
+ static int randomstring_captcha(pam_handle_t *pamh, int flags, int argc, const char *argv[]);
++static int before_after_captcha(pam_handle_t *pamh, int flags, int argc, const char *argv[]);
+ 
+ typedef int (*captcha_func_t)(pam_handle_t *, int, int, const char **);
+ 
+@@ -104,6 +105,7 @@
+   { "dda", dda_captcha, },
+   { "math", math_captcha, },
+   { "randomstring", randomstring_captcha, },
++  { "before_after", before_after_captcha, },
+   { NULL, NULL, },
+ };
+ 
+@@ -336,6 +338,28 @@
+ }
+ /*}}}*/
+ 
++/* Before or After captcha {{{ */
++static int before_after_captcha(pam_handle_t *pamh, int flags, int argc, const char *argv[]) {
++  int x, z, random_q, answer = 0;
++  char *resp   = NULL;
++  char *bef_aft;
++  x        = rand() % 1000 + 50;
++  random_q = rand()%2;
++  random_q ==0? (bef_aft = "What number comes before "): (bef_aft = "What number comes after  ");
++  figlet(pamh, "%s %d ", bef_aft, x);
++
++  pamprompt(pamh, PAM_PROMPT_ECHO_ON, &resp, "Type the solution: ");
++  z = atoi(resp);
++
++  random_q ==0? (answer = x-1) : (answer = x+1);
++
++  if (answer != z)
++	return PAM_PERM_DENIED;
++
++  return PAM_SUCCESS;
++}/*}}}*/
++
++
+ /* Simple math captcha {{{ */
+ static int math_captcha(pam_handle_t *pamh, int flags, int argc, const char *argv[]) {
+   int x, y, z, answer = 0;
